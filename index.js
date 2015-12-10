@@ -29,9 +29,11 @@ function Hub (server, opts) {
 Hub.prototype.__proto__ = EventEmitter.prototype;
 
 function initHub (hub) {
-    hub.server.on('connection', function (conn) {
-        peerFromConnection(conn)
-    })
+    if(hub.server != null) {
+        hub.server.on('connection', function (conn) {
+            peerFromConnection(conn)
+        })
+    }
 
     hub.peerFromConnection = peerFromConnection
     hub.peerFromObjStream = peerFromObjStream
@@ -75,14 +77,14 @@ function initHub (hub) {
 
                 hub.peers.push(peer)
 
+                messages.on('data', function (obj) {
+                    handleMessage(peer, obj)
+                })
+
                 messages.write(['joined', { id: peer.id }])
                 hub.emit('log', ['peer', peer.id, peer.name, peer.attributes])
 
                 sendPeers()
-
-                messages.on('data', function (obj) {
-                    handleMessage(peer, obj)
-                })
             }
             catch (err) {
                 messages.end(['invalid'])
